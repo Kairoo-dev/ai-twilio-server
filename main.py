@@ -28,8 +28,18 @@ app.add_middleware(
 # =========================
 # Environment variables
 # =========================
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+# Twilio recommends API Keys (SID starts with 'SK...') over the master Auth Token.
+# When using HTTP Basic Auth with Twilio:
+#   - Username is the API Key SID (or Account SID for legacy Auth Token auth)
+#   - Password is the API Key Secret (or Auth Token for legacy auth)
+#   - Endpoint URL still uses the Account SID (starts with 'AC...')
+TWILIO_API_KEY = os.getenv("TWILIO_API_KEY") or os.getenv("TWILIO_API_KEY_SID") or TWILIO_ACCOUNT_SID
+TWILIO_API_SECRET = (
+    os.getenv("TWILIO_API_SECRET")
+    or os.getenv("TWILIO_API_KEY_SECRET")
+    or os.getenv("TWILIO_AUTH_TOKEN")
+)
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -654,7 +664,7 @@ def send_sms(to_number: str, message: str, limit: int = MAX_REPLY_CHARS):
     response = requests.post(
         TWILIO_MESSAGES_URL,
         data=payload,
-        auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
+        auth=(TWILIO_API_KEY, TWILIO_API_SECRET),
         timeout=30,
     )
 
